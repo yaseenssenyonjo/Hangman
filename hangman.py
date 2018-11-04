@@ -1,7 +1,13 @@
+from __future__ import print_function
+
 from os import name
-from sys import stdout
 from random import randint
 from collections import OrderedDict
+from sys import stdout, version_info
+
+if version_info >= (3, 0):
+    def xrange(*args, **kwargs):
+        return iter(range(*args, **kwargs))
 
 
 class Hangman(object):
@@ -30,7 +36,7 @@ class Hangman(object):
 
         # If there are no words loaded, return.
         if len(self._words) == 0:
-            print 'There are zero words to select from.'
+            print('There are zero words to select from.')
             return
 
         self._select_difficulty()
@@ -46,19 +52,19 @@ class Hangman(object):
 
             # Check if the word is completed.
             if self._is_word_completed(word):
-                print 'You win!'
-                print 'Waiting for input before closing...'
+                print('You win!')
+                print('Waiting for input before closing...')
                 self._get_character()
                 break
 
             # Check if there are no turns left.
             if self._no_of_turns == 0:
-                print 'You lose!'
-                print 'Waiting for input before closing...'
+                print('You lose!')
+                print('Waiting for input before closing...')
                 self._get_character()
                 break
 
-            print 'You have {} turns left to guess the word.'.format(self._no_of_turns)
+            print('You have {} turns left to guess the word.'.format(self._no_of_turns))
 
             # Keeping to try to get a character until it is valid.
             while True:
@@ -68,25 +74,25 @@ class Hangman(object):
 
     def _supports_current_os(self):
         if name not in self._platform_to_implementation:
-            print 'Sorry, this operating system is not supported!'
+            print('Sorry, this operating system is not supported!')
             return False
 
         return True
 
     def _select_difficulty(self):
         # Get the dictionary as items.
-        items = self._difficulty_to_settings.items()
+        items = list(self._difficulty_to_settings.items())
 
         # Iterate over the items and output them as options.
         for i in xrange(len(items)):
-            print '[{}]: {}'.format(i + 1, items[i][0])
+            print('[{}]: {}'.format(i + 1, items[i][0]))
 
         # Keep asking for the desired difficulty until a valid answer is given.
         while True:
             # Get user input.
-            stdout.write('Select the desired difficulty by entering corresponding number: ')
+            self._stdout_write('Select the desired difficulty by entering corresponding number: ')
             difficulty = self._get_character()
-            stdout.write(difficulty + '\r\n')
+            self._stdout_write(difficulty + '\r\n')
 
             # Retry if the input if it is not a number
             if not difficulty.isdigit():
@@ -101,7 +107,7 @@ class Hangman(object):
                 self._difficulty = items[difficulty][0]
                 self._no_of_turns = items[difficulty][1]['no_of_turns']
                 # Output the difficulty chosen.
-                print 'You have chosen {} mode, you have {} attempts to guess the word.\n'.format(self._difficulty.lower(), self._no_of_turns)
+                print('You have chosen {} mode, you have {} attempts to guess the word.\n'.format(self._difficulty.lower(), self._no_of_turns))
                 # Break out of the loop.
                 break
 
@@ -136,10 +142,10 @@ class Hangman(object):
         for letter in word:
             partial_word += letter if letter in self._guessed_letters['correct'] else '_'
 
-        print partial_word
+        print(partial_word)
 
     def _output_incorrect_guesses(self):
-        print 'Misses: ' + ', '.join(self._guessed_letters['incorrect'])
+        print('Misses: ' + ', '.join(self._guessed_letters['incorrect']))
 
     def _check_user_input(self, word, letter):
         # Get the target list by determining if the letter is in the word or not.
@@ -173,7 +179,7 @@ class Hangman(object):
     @staticmethod
     def _get_character_windows():
         from msvcrt import getch
-        return getch()
+        return getch().decode('utf8')
 
     @staticmethod
     def _get_character_unix():
@@ -195,3 +201,8 @@ class Hangman(object):
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
         return ch
+
+    @staticmethod
+    def _stdout_write(text):
+        stdout.write(text)
+        stdout.flush()
