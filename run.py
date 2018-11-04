@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 class Hangman(object):
     def __init__(self):
-        self._words = ['hello']
+        self._words = []
         self._guessed_letters = {'correct': [], 'incorrect': []}
         self._platform_to_implementation = {
             'nt': self._get_character_windows,
@@ -22,6 +22,56 @@ class Hangman(object):
         self._difficulty_to_settings = OrderedDict()
         self._difficulty_to_settings['Easy'] = {'percentage': 50, 'no_of_turns': 10}
         self._difficulty_to_settings['Hard'] = {'percentage': 10, 'no_of_turns': 5}
+
+    def load_words_from_array(self, words):
+        self._words = words
+
+    def load_words_from_file(self, path):
+        self._words = open(path, 'r').read().splitlines()
+        print self._words
+
+    def update_loop(self):
+        # If this operating system is not supported, return.
+        if not self._supports_current_os():
+            return
+
+        # If there are no words loaded, return.
+        if len(self._words) == 0:
+            print 'There are zero words to select from.'
+            return
+
+        self._select_difficulty()
+
+        # Select a random word.
+        word = self._select_random_word()
+
+        while True:
+            # Output the word partially.
+            self._output_partial_word(word)
+            # Output the incorrect guesses.
+            self._output_incorrect_guesses()
+
+            # Check if the word is completed.
+            if self._is_word_completed(word):
+                print 'You win!'
+                print 'Waiting for input before closing...'
+                self._get_character()
+                break
+
+            # Check if there are no turns left.
+            if self._no_of_turns == 0:
+                print 'You lose!'
+                print 'Waiting for input before closing...'
+                self._get_character()
+                break
+
+            print 'You have {} turns left to guess the word.'.format(self._no_of_turns)
+
+            # Keeping to try to get a character until it is valid.
+            while True:
+                character = self._get_character().lower()
+                if character.isalnum() and self._check_user_input(word, character):
+                    break
 
     def _supports_current_os(self):
         if name not in self._platform_to_implementation:
@@ -153,44 +203,7 @@ class Hangman(object):
 
         return ch
 
-    def update_loop(self):
-        # If this operating system is not supported, return.
-        if not self._supports_current_os():
-            return
-
-        self._select_difficulty()
-
-        # Select a random word.
-        word = self._select_random_word()
-
-        while True:
-            # Output the word partially.
-            self._output_partial_word(word)
-            # Output the incorrect guesses.
-            self._output_incorrect_guesses()
-
-            # Check if the word is completed.
-            if self._is_word_completed(word):
-                print 'You win!'
-                print 'Waiting for input before closing...'
-                self._get_character()
-                break
-
-            # Check if there no turns left.
-            if self._no_of_turns == 0:
-                print 'You lose!'
-                print 'Waiting for input before closing...'
-                self._get_character()
-                break
-
-            print 'You have {} turns left to guess the word.'.format(self._no_of_turns)
-
-            # Keeping to try to get a character until it is valid.
-            while True:
-                character = self._get_character()
-                if self._check_user_input(word, character):
-                    break
-
 
 hangman = Hangman()
+hangman.load_words_from_file('./words')
 hangman.update_loop()
